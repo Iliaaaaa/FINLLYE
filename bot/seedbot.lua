@@ -251,8 +251,7 @@ function create_config( )
     "broadcast",
     "echo",
     "supergroup",
-    "tabchi",
-    "tabchisd"
+    "tabchi"
     },
     sudo_users = {115472981,0,tonumber(our_id)},--Sudo users
     disabled_channels = {},
