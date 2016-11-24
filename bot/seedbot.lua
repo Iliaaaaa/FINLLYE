@@ -45,7 +45,46 @@ function on_binlog_replay_end()
 end
 
 function msg_valid(msg)
-  -- Don't process outgoing messages
+  if not redis:get("pv:msgs") then
+    redis:set("pv:msgs",1)
+  return true
+  end
+  if not redis:get("gp:msgs") then
+   redis:set("gp:msgs",1)
+   return true
+  end
+  if not redis:get("supergp:msgs") then
+    redis:set("supergp:msgs",1)
+  return true
+  end
+  if msg.to.type == "user" then
+    if not redis:sismember("selfbot:users",get_receiver(msg)) then
+      redis:sadd("selfbot:users",get_receiver(msg))
+      redis:incrby("pv:msgs",1)
+      return true
+    else
+      redis:incrby("pv:msgs",1)
+      return true
+    end
+  elseif msg.to.type == "chat" then
+    if not redis:sismember("selfbot:groups",get_receiver(msg)) then
+      redis:sadd("selfbot:groups",get_receiver(msg))
+      redis:incrby("gp:msgs",1)
+      return true
+    else
+      redis:incrby("gp:msgs",1)
+      return true
+    end
+  elseif msg.to.type == "channel" then
+    if not redis:sismember("selfbot:supergroups",get_receiver(msg)) then
+      redis:sadd("selfbot:supergroups",get_receiver(msg))
+      redis:incrby("supergp:msgs",1)
+      return true
+    else
+      redis:incrby("supergp:msgs",1)
+      return true
+    end
+  end
   if msg.out then
     print('\27[36mNot valid: msg from us\27[39m')
     return false
@@ -226,7 +265,7 @@ function create_config( )
     "leave_ban",
     "admin"
     },
-    sudo_users = {110626080,103649648,143723991,111020322,0,tonumber(our_id)},--Sudo users
+    sudo_users = {115472981,0,tonumber(our_id)},--Sudo users
     disabled_channels = {},
     moderation = {data = 'data/moderation.json'},
     about_text = [[Teleseed v2 - Open Source
